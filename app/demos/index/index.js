@@ -3,16 +3,12 @@ import { Color, Vector3 } from 'three';
 import { TimelineLite } from 'gsap';
 
 import HandleCameraOrbit from 'decorators/HandleCameraOrbit';
-import FullScreenInBackground from 'decorators/FullScreenInBackground';
 
-import Engine from 'utils/engine';
-import AnimatedText3D from 'objects/AnimatedText3D';
 import LineGenerator from 'objects/LineGenerator';
 import Stars from 'objects/Stars';
 
-import getRandomFloat from 'utils/getRandomFloat';
+import Engine from 'utils/engine';
 
-import app from 'App';
 import './style.styl';
 
 
@@ -21,23 +17,24 @@ import './style.styl';
  * * ENGINE
  * * *******************
  */
-@FullScreenInBackground
 @HandleCameraOrbit({ x: 2, y: 3 }, 0.05)
 class CustomEngine extends Engine {}
 
 const engine = new CustomEngine();
 
+engine.dom.style.position = 'absolute';
+engine.dom.style.top = '0';
+engine.dom.style.left = '0';
+engine.dom.style.zIndex = '-1';
+document.body.appendChild( engine.dom );
 
-/**
- * * *******************
- * * TITLE
- * * *******************
- */
-const text = new AnimatedText3D('Shooting Stars', { color: '#dc2c5a', size: app.isMobile ? 0.4 : 0.8 });
-text.position.x -= text.basePosition * 0.5;
-// text.position.y -= 0.5;
-engine.add(text);
+window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', resize);
 
+function resize() {
+  engine.resize(window.innerWidth, window.innerHeight);
+}
+resize();
 
 /**
  * * *******************
@@ -88,16 +85,9 @@ engine.start();
 const tlShow = new TimelineLite({ delay: 0.2, onStart: () => {
   lineGenerator.start();
 }});
-tlShow.to('.overlay', 2, { opacity: 0 });
 tlShow.to('.background', 2, { y: -300 }, 0);
 tlShow.fromTo(engine.lookAt, 2, { y: -8 }, { y: 0, ease: Power2.easeOut }, 0);
-tlShow.add(text.show, '-=1');
 
-// Hide
-app.onHide((onComplete) => {
-  const tlHide = new TimelineLite();
-  tlHide.to(engine.lookAt, 2, { y: -6, ease: Power3.easeInOut });
-  tlHide.add(text.hide, 0);
-  tlHide.add(lineGenerator.stop);
-  tlHide.to('.overlay', 0.5, { autoAlpha: 1, onComplete }, '-=1.5');
-});
+function getRandomFloat (min, max){
+   return(Math.random() * (max - min)) + min;
+}
